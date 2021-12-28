@@ -22,8 +22,8 @@ bl_info = {
     "name": "Import Pointcache Format (.pc2)",
     "author": "Jasper van Nieuwenhuizen, Ivo Grigull, Matt Ebb,"\
               " Bill L. Nieuwendorp",
-    "version": (0, 5),
-    "blender": (2, 5, 8),
+    "version": (0, 6),
+    "blender": (2, 80, 0),
     "location": "File > Import > Pointcache (.pc2)",
     "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/Scripts/Import-Export/PC2_Pointcache_import",
     "tracker_url": "http://projects.blender.org/tracker/index.php?func=detail&aid=28056&group_id=153&atid=467",
@@ -63,7 +63,7 @@ def pc2_import(filepath, ob, scene, PREF_OFFSET=0, PREF_JUMP=1):
     try:
         len(ob.data.shape_keys.key_blocks)
     except:
-        ob.shape_key_add('Basis')
+        ob.shape_key_add(name='Basis')
         ob.data.update()
 
     scene.frame_current = startFrame + PREF_OFFSET
@@ -72,7 +72,7 @@ def pc2_import(filepath, ob, scene, PREF_OFFSET=0, PREF_JUMP=1):
 
         # Insert new shape key.
         #new_shapekey =
-        ob.shape_key_add('frame_%.4d' % fr)
+        ob.shape_key_add(name='frame_%.4d' % fr)
         #new_shapekey_name = new_shapekey.name
 
         index = len(ob.data.shape_keys.key_blocks) - 1
@@ -144,7 +144,7 @@ class Import_pc2(bpy.types.Operator, ImportHelper):
             raise Exception("filename not set")
 
         pc2_import(self.properties.filepath, context.active_object,
-                context.scene, self.properties.frameOffset)
+                context.scene, 0) # self.properties.frameOffset)
 
         return {'FINISHED'}
 
@@ -159,15 +159,23 @@ class Import_pc2(bpy.types.Operator, ImportHelper):
 def menu_func(self, context):
     self.layout.operator(Import_pc2.bl_idname, text='Pointcache (.pc2)')
 
+classes = [ Import_pc2 ]
 
 def register():
-    bpy.utils.register_module(__name__)
-    bpy.types.INFO_MT_file_import.append(menu_func)
+    from bpy.utils import register_class
+    for cls in classes:
+        register_class(cls)
+
+    bpy.types.TOPBAR_MT_file_import.append(menu_func)
 
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
-    bpy.types.INFO_MT_file_import.remove(menu_func)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func)
+
+    from bpy.utils import unregister_class
+    for cls in classes[::-1]:
+        unregister_class(cls)
+
 
 if __name__ == "__main__":
     register()
